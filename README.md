@@ -77,7 +77,6 @@ LazyPoot is a Go-based TUI application for Termux that installs and manages Linu
 </div>
 
 ---
-<div align="center">
 
 ## 🚀 Quick Start
 
@@ -111,7 +110,7 @@ ln -s ~/lazypoot-arm64 $PREFIX/bin/lazypoot
 cp lazypoot-arm64 $PREFIX/bin/lazypoot
 ```
 
-  </div>
+  
   
 ---
 

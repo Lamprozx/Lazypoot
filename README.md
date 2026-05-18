@@ -26,6 +26,7 @@
 
 - [Overview](#-overview)
 - [Screenshots](#-screenshots)
+- [Quick Install](#-quick-install)
 - [Architecture](#-architecture)
   - [Model View Update](#model-view-update-bubble-tea)
   - [Navigation](#navigation)
@@ -76,6 +77,44 @@ LazyPoot is a Go-based TUI application for Termux that installs and manages Linu
 </div>
 
 ---
+<div align="center">
+
+## 🚀 Quick Start
+
+```bash
+# Download the binary
+wget https://github.com/Lamprozx/Lazypoot/releases/download/v1.0.0-beta/lazypoot-arm64
+chmod +x lazypoot-arm64
+./lazypoot-arm64
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/Lamprozx/Lazypoot.git
+cd Lazypoot
+make arm64
+chmod +x lazypoot-arm64
+./lazypoot-arm64
+## MAKE SURE YOU HAVE GO INSTALLED ON YOUR TERMUX
+```
+
+You can make it `executable` from anywhere using one of these methods:
+```bash
+# Method A: Create a symlink (If downloaded via wget)
+ln -s ~/lazypoot-arm64 $PREFIX/bin/lazypoot
+
+## Note: If you build from source, change the source path to:
+## ln -s ~/Lazypoot/lazypoot-arm64 $PREFIX/bin/lazypoot
+
+# Method B: Copy directly to Termux binaries folder
+cp lazypoot-arm64 $PREFIX/bin/lazypoot
+```
+
+  </div>
+  
+---
+
 
 ## 🏗️ Architecture
 
@@ -178,13 +217,11 @@ Each installed distro gets a portal script at `~/.lazypoot/portal/<distro>.sh`:
 
 ```
 Portal Script Logic
-─────────────────────────────────────────────────────────
  1. Check if root filesystem exists
  2. If username passed as argument → login directly
  3. Otherwise → show interactive user selection menu
  4. Login via: proot-distro login <distro> -- su - <user>
  5. On session end → return to Termux shell prompt
-─────────────────────────────────────────────────────────
 ```
 
 > The shell function generated in RC files calls the portal script as a **child process**. No `exec` is used, so returning from the portal script returns to the parent shell.
@@ -271,7 +308,6 @@ The doctor system has two implementations:
 
 | Mode | File | Checks |
 |---|---|---|
-| **CLI Doctor** | `app/doctor.go` | proot-distro presence, root filesystem, RC writability, portal scripts, state file, lock status |
 | **TUI Doctor** | `screens/doctor.go` | Tool availability via `whereis`, install logs, system info from `app/sysinfo.go` |
 
 ---
@@ -324,6 +360,7 @@ lazypoot/
 | `charmbracelet/bubbletea` | v0.25.0 | TUI framework (event loop, MVU) |
 | `charmbracelet/lipgloss` | v0.9.1 | Style and color primitives |
 | Go standard library | — | `os/exec`, `crypto/sha256`, `encoding/json`, `flag` |
+| And Other Additional Packages | — | `check go.sum` |
 
 ---
 

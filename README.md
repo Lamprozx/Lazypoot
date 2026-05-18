@@ -16,8 +16,9 @@
 
 ---
 
-> [!NOTE]
+> [!CAUTION]
 > LazyPoot is built for Termux on Android (ARM64). It requires `proot-distro` and optionally Termux:X11 for desktop environments.
+> 
 > The current version of lazypoot is under development, you may encounter some bugs.
 
 ---

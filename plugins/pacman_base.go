@@ -32,8 +32,8 @@ var pacmanDEPkgs = map[string]string{
 	"openbox":	"openbox obconf",
 	"gnome":	"gnome gnome-extra",
 	"kde":		"plasma kde-applications",
-	"mate":		"mate mate-extra",
-	"cinnamon":	"cinnamon",
+	"awesome":	"awesome",
+	"i3":		"i3-wm",
 }
 
 func (p pacmanBase) InstallDesktop(de string) []string {

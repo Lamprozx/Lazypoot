@@ -65,29 +65,56 @@ func loadInstalledDistrosCmd() tea.Cmd {
 	return func() tea.Msg {
 		fs := fsScanDistros()
 		pd := pdListDistros()
+		img := imageScanDistros()
 
-		if len(pd) == 0 {
-			return InstalledDistrosLoadedMsg{Distros: fs}
-		}
-
-		fsMap := map[string]bool{}
-		for _, d := range fs {
-			fsMap[d.ID] = true
-		}
-
+		seen := map[string]bool{}
 		var merged []types.InstalledDistro
+		for _, d := range fs {
+			if !seen[d.ID] {
+				seen[d.ID] = true
+				merged = append(merged, d)
+			}
+		}
 		for _, d := range pd {
-			if fsMap[d.ID] {
+			if !seen[d.ID] {
+				seen[d.ID] = true
+				merged = append(merged, d)
+			}
+		}
+		for _, d := range img {
+			if !seen[d.ID] {
+				seen[d.ID] = true
 				merged = append(merged, d)
 			}
 		}
 
-		if len(merged) > 0 {
-			return InstalledDistrosLoadedMsg{Distros: merged}
-		}
-
-		return InstalledDistrosLoadedMsg{Distros: fs}
+		return InstalledDistrosLoadedMsg{Distros: merged}
 	}
+}
+
+func imageScanDistros() []types.InstalledDistro {
+	home := os.Getenv("HOME")
+	if home == "" {
+		home = "/data/data/com.termux/files/home"
+	}
+	ids := ScanImageDistros(home)
+	if len(ids) == 0 {
+		return nil
+	}
+	lookup := buildDistroLookup()
+	var out []types.InstalledDistro
+	for _, id := range ids {
+		name, icon := id, ""
+		if d, ok := lookup[id]; ok {
+			name, icon = d.Name, d.Icon
+		}
+		out = append(out, types.InstalledDistro{
+			Name: name,
+			ID:   id,
+			Icon: icon,
+		})
+	}
+	return out
 }
 
 func fsScanDistros() []types.InstalledDistro {

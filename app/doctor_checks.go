@@ -1,7 +1,9 @@
 package app
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"lazypoot/types"
@@ -14,6 +16,7 @@ var checkTools = []struct {
 	icon	string
 }{
 	{"proot-distro", "󰒋"},
+	{"proot", "󰒋"},
 	{"bash", "\uf489"},
 	{"wget", "󰖩"},
 	{"curl", "󰛳"},
@@ -64,4 +67,44 @@ func spinnerFrames() []string {
 func spinnerFrame(tick int) string {
 	frames := spinnerFrames()
 	return frames[tick%len(frames)]
+}
+
+func ScanImageDistros(home string) []string {
+	dd := filepath.Join(home, ".lazypoot", "distros")
+	entries, err := os.ReadDir(dd)
+	if err != nil {
+		return nil
+	}
+	var installed []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		mp := filepath.Join(dd, e.Name(), "meta.json")
+		meta, err := ReadMeta(mp)
+		if err != nil {
+			continue
+		}
+		if meta.State == "ready" {
+			installed = append(installed, e.Name())
+		}
+	}
+	return installed
+}
+
+func CheckImageDistroIntegrity(home, distroID string) (string, bool) {
+	rf := filepath.Join(home, ".lazypoot", "distros", distroID, "rootfs")
+	if _, err := os.Stat(filepath.Join(rf, "etc", "passwd")); err != nil {
+		return "rootfs missing or corrupt", false
+	}
+	if _, err := os.Stat(filepath.Join(rf, "bin", "sh")); err != nil {
+		if _, err2 := os.Stat(filepath.Join(rf, "bin", "bash")); err2 != nil {
+			return "no shell binary found", false
+		}
+	}
+	mp := filepath.Join(home, ".lazypoot", "distros", distroID, "meta.json")
+	if _, err := os.Stat(mp); err != nil {
+		return "meta.json missing", false
+	}
+	return "", true
 }

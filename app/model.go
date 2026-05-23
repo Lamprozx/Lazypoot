@@ -4,19 +4,28 @@ import (
 	"context"
 	"strings"
 
+	"lazypoot/plugins"
 	"lazypoot/types"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+var guiOptions = []string{"CLI Only", "Desktop Environment", "Window Manager"}
+var guiIcons = []string{"\uf489", "󰧨", "󰞷"}
+var guiIDs = []string{"cli", "de", "wm"}
+
 var deOptions = []string{
-	"XFCE", "LXQt", "Openbox", "GNOME", "KDE Plasma", "MATE", "Cinnamon", "CLI Only",
+	"XFCE", "LXQt", "GNOME", "KDE Plasma", "CLI Only",
 }
-var deIcons = []string{"󰧨", "󰧨", "󰧨", "󰨇", "󰚗", "󰧨", "󰧨", "\uf489"}
-var deIDs = []string{"xfce", "lxqt", "openbox", "gnome", "kde", "mate", "cinnamon", "cli"}
+var deIcons = []string{"󰧨", "󰧨", "󰨇", "󰚗", "\uf489"}
+var deIDs = []string{"xfce", "lxqt", "gnome", "kde", "cli"}
+
+var wmOptions = []string{"Openbox", "Awesome", "i3"}
+var wmIcons = []string{"", "", ""}
+var wmIDs = []string{"openbox", "awesome", "i3"}
 
 var displayOptions = []string{"X11 (Termux X11)", "VNC (TigerVNC)"}
-var displayIcons = []string{"󰹑", "󰕈"}
+var displayIcons = []string{"󰹑", "󰢹"}
 var displayIDs = []string{"x11", "vnc"}
 
 var driverOptions = []string{"Install GPU acceleration (VirGL / OpenGL)", "Disable (software rendering only)"}
@@ -33,62 +42,69 @@ var profileMenuLabels = []string{"Set Hostname", "Add User", "Remove User"}
 var profileMenuIcons = []string{"󰟀", "󰀄", "󰀅"}
 
 type Model struct {
-	width	int
-	height	int
-	nav	NavStack
+	width  int
+	height int
+	nav    NavStack
 
-	config	types.InstallConfig
+	config types.InstallConfig
 
-	distroItems		[]types.DistroItem
-	installedDistros	[]types.InstalledDistro
+	distroItems      []types.DistroItem
+	installedDistros []types.InstalledDistro
 
 	mainCursor	int
 	distroCursor	int
 	setupCursor	int
+	guiCursor	int
+	kaliVariantCursor	int
 	subCursor	int
 	profileCursor	int
-	deleteCursor	int
-	doctorCursor	int
+	deleteCursor  int
+	doctorCursor  int
 
-	fontWarnCursor	int
-	showFontWarning	bool
-	fontInstallLogs	[]types.LogEntry
-	fontInstallChan	chan tea.Msg
-	fontInstallStep	int
+	fontWarnCursor  int
+	showFontWarning bool
+	fontInstallLogs []types.LogEntry
+	fontInstallChan chan tea.Msg
+	fontInstallStep int
 
-	doctorLoading	bool
-	doctorChecks	[]types.CheckResult
-	spinnerTick	int
+	doctorLoading bool
+	doctorChecks  []types.CheckResult
+	spinnerTick   int
 
-	sysInfoLoading	bool
-	sysInfo		types.SysInfoData
+	sysInfoLoading bool
+	sysInfo        types.SysInfoData
 
-	logs		[]types.LogEntry
-	logScroll	int
-	logTotal	int
+	logs      []types.LogEntry
+	logScroll int
+	logTotal  int
 
-	isDeleting	bool
-	deleteCancelFn	context.CancelFunc
-	installCancelFn	context.CancelFunc
+	isDeleting      bool
+	deleteCancelFn  context.CancelFunc
+	installCancelFn context.CancelFunc
 
-	showError	bool
-	errorMsg	string
-	installErrMsg	string
+	showError     bool
+	errorMsg      string
+	installErrMsg string
 
-	inputBuffer	string
-	addUserNameBuf	string
+	inputBuffer    string
+	addUserNameBuf string
 
 	logChan		chan tea.Msg
 	installPct	int
+
+	kaliVariants		[]plugins.ImageVariant
+	kaliArch		string
+	kaliDownloadStep	int
+	availableStorage	int64
 }
 
 func NewModel() Model {
 	return Model{
-		width:		80,
-		height:		24,
-		nav:		newNavStack(),
-		config:		types.InstallConfig{Timezone: "Asia/Jakarta"},
-		distroItems:	defaultDistroItems(),
+		width:       80,
+		height:      24,
+		nav:         newNavStack(),
+		config:      types.InstallConfig{Timezone: "Asia/Jakarta"},
+		distroItems: defaultDistroItems(),
 	}
 }
 
@@ -98,6 +114,7 @@ func (m Model) Init() tea.Cmd {
 
 func defaultDistroItems() []types.DistroItem {
 	return []types.DistroItem{
+		{Name: "Kali Linux", ID: "kali", Icon: "\uf327"},
 		{Name: "Adélie Linux", ID: "adelie", Icon: "\uf300"},
 		{Name: "AlmaLinux", ID: "almalinux", Icon: "\uf31d"},
 		{Name: "Alpine Linux", ID: "alpine", Icon: "\uf300"},
@@ -133,7 +150,7 @@ func (m *Model) validate() string {
 		errs = append(errs, "No distro selected")
 	}
 	if m.config.DE == "" {
-		errs = append(errs, "No desktop environment selected")
+		errs = append(errs, "No GUI option selected")
 	}
 	if m.config.DE != "cli" && m.config.Display == "" {
 		errs = append(errs, "No display server selected")

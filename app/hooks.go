@@ -42,7 +42,7 @@ func InjectPortalHooks(home, distroID string) (err error) {
 		if r := recover(); r != nil {
 			rollback()
 			LogEvent(EvBackupRestored, "backup restored after panic", nil)
-			panic(r)
+			err = fmt.Errorf("panic in InjectPortalHooks: %v", r)
 		}
 		if err != nil {
 			rollback()
@@ -99,7 +99,7 @@ func RemovePortalHooks(home, distroID string) (err error) {
 		if r := recover(); r != nil {
 			rollback()
 			LogEvent(EvBackupRestored, "backup restored after panic", nil)
-			panic(r)
+			err = fmt.Errorf("panic in RemovePortalHooks: %v", r)
 		}
 		if err != nil {
 			rollback()

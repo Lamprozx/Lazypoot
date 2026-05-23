@@ -10,7 +10,7 @@ import (
 
 type DoctorResult struct {
 	Name   string
-	Status string // OK, FAIL, WARN
+	Status string
 	Detail string
 }
 
@@ -42,9 +42,6 @@ func checkRootfs(home string) []DoctorResult {
 	}
 	root := filepath.Join(prefix, "var/lib/proot-distro/installed-rootfs")
 	entries, err := os.ReadDir(root)
-	if err != nil {
-		return []DoctorResult{{"rootfs", "FAIL", fmt.Sprintf("cannot read %s: %v", root, err)}}
-	}
 
 	ids := ReadManifest(home)
 	if len(ids) == 0 {
@@ -52,14 +49,31 @@ func checkRootfs(home string) []DoctorResult {
 	}
 
 	var results []DoctorResult
-	found := map[string]bool{}
-	for _, e := range entries {
-		if e.IsDir() {
-			found[e.Name()] = true
+	pdFound := map[string]bool{}
+	if err == nil {
+		for _, e := range entries {
+			if e.IsDir() {
+				pdFound[e.Name()] = true
+			}
 		}
 	}
+
+	// Check image-based distros
+	imageDistros := ScanImageDistros(home)
+	imageMap := make(map[string]bool, len(imageDistros))
+	for _, id := range imageDistros {
+		imageMap[id] = true
+	}
+
 	for _, id := range ids {
-		if found[id] {
+		if imageMap[id] {
+			msg, ok := CheckImageDistroIntegrity(home, id)
+			if ok {
+				results = append(results, DoctorResult{fmt.Sprintf("  %s rootfs", id), "OK", "image-based"})
+			} else {
+				results = append(results, DoctorResult{fmt.Sprintf("  %s rootfs", id), "FAIL", msg})
+			}
+		} else if pdFound[id] {
 			results = append(results, DoctorResult{fmt.Sprintf("  %s rootfs", id), "OK", ""})
 		} else {
 			results = append(results, DoctorResult{fmt.Sprintf("  %s rootfs", id), "FAIL", "directory not found"})
@@ -95,10 +109,12 @@ func checkPortalScripts(home string) []DoctorResult {
 			results = append(results, DoctorResult{fmt.Sprintf("  %s", id), "FAIL", err.Error()})
 			continue
 		}
-		if !strings.HasPrefix(string(data), "#!/usr/bin/env bash") {
-			results = append(results, DoctorResult{fmt.Sprintf("  %s", id), "WARN", "missing shebang"})
-		} else {
+		content := string(data)
+		if strings.HasPrefix(content, "#!/data/data/com.termux/files/usr/bin/bash") ||
+			strings.HasPrefix(content, "#!/usr/bin/env bash") {
 			results = append(results, DoctorResult{fmt.Sprintf("  %s", id), "OK", script})
+		} else {
+			results = append(results, DoctorResult{fmt.Sprintf("  %s", id), "WARN", "missing shebang"})
 		}
 	}
 	return results

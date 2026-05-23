@@ -28,8 +28,8 @@ var opensuseDEPkgs = map[string]string{
 	"openbox":	"openbox",
 	"gnome":	"patterns-gnome-gnome",
 	"kde":		"patterns-kde-kde",
-	"mate":		"mate",
-	"cinnamon":	"cinnamon",
+	"awesome":	"awesome",
+	"i3":		"i3",
 }
 
 func (o opensusePlugin) InstallDesktop(de string) []string {
@@ -94,8 +94,8 @@ var voidDEPkgs = map[string]string{
 	"openbox":	"openbox",
 	"gnome":	"gnome",
 	"kde":		"kde5",
-	"mate":		"mate",
-	"cinnamon":	"cinnamon",
+	"awesome":	"awesome",
+	"i3":		"i3",
 }
 
 func (v voidPlugin) InstallDesktop(de string) []string {

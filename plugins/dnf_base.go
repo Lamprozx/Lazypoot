@@ -30,8 +30,8 @@ var dnfDEPkgs = map[string]string{
 	"openbox":	"openbox",
 	"gnome":	"@gnome-desktop",
 	"kde":		"@kde-desktop",
-	"mate":		"@mate-desktop",
-	"cinnamon":	"@cinnamon-desktop",
+	"awesome":	"awesome",
+	"i3":		"i3",
 }
 
 func (d dnfBase) InstallDesktop(de string) []string {

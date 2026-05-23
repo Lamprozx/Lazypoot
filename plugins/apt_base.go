@@ -35,8 +35,8 @@ var aptDEPkgs = map[string]string{
 	"openbox":	"openbox obconf",
 	"gnome":	"gnome",
 	"kde":		"kde-standard",
-	"mate":		"mate-desktop-environment",
-	"cinnamon":	"cinnamon",
+	"awesome":	"awesome",
+	"i3":		"i3",
 }
 
 func (a aptBase) InstallDesktop(de string) []string {

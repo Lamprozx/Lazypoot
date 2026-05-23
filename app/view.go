@@ -23,8 +23,14 @@ func (m Model) View() string {
 		return screens.RenderSelectDistro(m.distroItems, m.distroCursor, m.width, m.height)
 	case types.ScreenSetup:
 		return screens.RenderSetup(m.config, m.setupCursor, m.width, m.height)
+	case types.ScreenSetupGUI:
+		return screens.RenderSetupSubscreen("  GUI Selection", guiOptions, guiIcons, m.guiCursor, m.width, m.height)
 	case types.ScreenSetupDE:
-		return screens.RenderSetupSubscreen("  Desktop Environment", deOptions, deIcons, m.subCursor, m.width, m.height)
+		return screens.RenderSetupSubscreen("󰧨  Desktop Environment", deOptions, deIcons, m.subCursor, m.width, m.height)
+	case types.ScreenSetupWM:
+		return screens.RenderSetupSubscreen("󰞷  Window Manager", wmOptions, wmIcons, m.subCursor, m.width, m.height)
+	case types.ScreenSetupKaliVariant:
+		return screens.RenderKaliVariant(m.kaliVariants, m.kaliVariantCursor, m.availableStorage, m.kaliArch, m.width, m.height)
 	case types.ScreenSetupDisplay:
 		return screens.RenderSetupSubscreen("󰹑  Display Server", displayOptions, displayIcons, m.subCursor, m.width, m.height)
 	case types.ScreenSetupDriver:

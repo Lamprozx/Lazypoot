@@ -30,8 +30,8 @@ var apkDEPkgs = map[string]string{
 	"openbox":	"openbox",
 	"gnome":	"gnome",
 	"kde":		"plasma",
-	"mate":		"mate-desktop",
-	"cinnamon":	"cinnamon",
+	"awesome":	"awesome",
+	"i3":		"i3wm",
 }
 
 func (a apkBase) InstallDesktop(de string) []string {

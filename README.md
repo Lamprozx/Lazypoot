@@ -79,7 +79,7 @@ LazyPoot is a Go-based TUI application for Termux that installs and manages Linu
 
 ```bash
 # Download the binary
-wget https://github.com/Lamprozx/Lazypoot/releases/download/v1.0.0-beta/lazypoot-arm64
+wget https://github.com/Lamprozx/Lazypoot/releases/download/v2.0.0/lazypoot-arm64
 chmod +x lazypoot-arm64
 ./lazypoot-arm64
 ```
@@ -257,13 +257,13 @@ These are consumed by `screens/version.go` for the `--version` output.
 
 **Normal mode:**
 ```
-lazypoot v1.0.0 (abc1234) built 2025-01-01 with go1.21.0 [clean]
+lazypoot v2.0.0 (abc1234) built 2025-01-01 with go1.21.0 [clean]
 ```
 
 **JSON mode** (`--version --json`):
 ```json
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "git_commit": "abc1234",
   "build_date": "2025-01-01",
   "go_version": "go1.21.0",

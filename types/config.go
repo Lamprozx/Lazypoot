@@ -13,7 +13,11 @@ const (
 	ScreenMainMenu	Screen	= iota
 	ScreenSelectDistro
 	ScreenSetup
+	ScreenSetupGUI
 	ScreenSetupDE
+	ScreenSetupWM
+	ScreenSetupKaliVariant
+	ScreenSetupParrotVariant
 	ScreenSetupDisplay
 	ScreenSetupDriver
 	ScreenSetupProfileMenu
@@ -58,8 +62,11 @@ type InstallConfig struct {
 
 	VNCPassword	string
 	Users		[]UserAccount
-	Packages	[]string
+	Packages		[]string
 	Timezone	string
+	KaliVariant	string
+	ParrotVariant	string
+	AvailableStorage	int64
 }
 
 type InstalledDistro struct {

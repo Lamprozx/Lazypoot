@@ -10,7 +10,7 @@ import (
 )
 
 var setupLabels = []string{
-	"Desktop Environment",
+	"GUI Selection",
 	"Display Server",
 	"GPU Driver",
 	"Profile / Users",

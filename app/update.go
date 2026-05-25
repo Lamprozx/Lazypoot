@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -134,6 +135,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case ImageInstallDoneMsg:
+		_, _ = writeInstallLog(m.logs, m.config.Distro)
+		if m.installCancelFn != nil {
+			m.installCancelFn()
+			m.installCancelFn = nil
+		}
+		m.logChan = nil
+		m.config.VNCPassword = msg.VNCPassword
+		m.nav.Reset()
+		m.nav.Push(types.ScreenInstallSuccess)
+		return m, nil
+
 	case InstallFinishedMsg:
 		_, _ = writeInstallLog(m.logs, m.config.Distro)
 		if m.installCancelFn != nil {
@@ -180,6 +193,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return handleSelectDistro(m, keyMsg)
 	case types.ScreenSetup:
 		return handleSetup(m, keyMsg)
+	case types.ScreenSetupGUI:
+		return handleGUISelection(m, keyMsg)
 	case types.ScreenSetupDE:
 		return handleSubList(m, keyMsg, deOptions, deIDs, func(m *Model, id string) {
 			m.config.DE = id
@@ -187,6 +202,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.config.Display = ""
 			}
 		})
+	case types.ScreenSetupWM:
+		return handleSubList(m, keyMsg, wmOptions, wmIDs, func(m *Model, id string) {
+			m.config.DE = id
+		})
+	case types.ScreenSetupKaliVariant:
+		return handleKaliVariant(m, keyMsg)
+	case types.ScreenSetupParrotVariant:
+		return handleParrotVariant(m, keyMsg)
 	case types.ScreenSetupDisplay:
 		return handleSubList(m, keyMsg, displayOptions, displayIDs, func(m *Model, id string) {
 			m.config.Display = id
@@ -293,6 +316,10 @@ func runDeleteDistroCmd(ctx context.Context, ids []string) chan tea.Msg {
 	ch := make(chan tea.Msg, 256)
 	go func() {
 		defer close(ch)
+		home := os.Getenv("HOME")
+		if home == "" {
+			home = "/data/data/com.termux/files/home"
+		}
 		for _, id := range ids {
 			select {
 			case <-ctx.Done():
@@ -302,6 +329,22 @@ func runDeleteDistroCmd(ctx context.Context, ids []string) chan tea.Msg {
 			}
 
 			ch <- DeleteProgressMsg{Level: types.LogStep, Message: fmt.Sprintf("Removing distro: %s...", id)}
+
+			imgDistroDir := filepath.Join(home, ".lazypoot", "distros", id)
+			if _, statErr := os.Stat(imgDistroDir); statErr == nil {
+				if err := os.RemoveAll(imgDistroDir); err != nil {
+					ch <- DeleteProgressMsg{Level: types.LogError, Message: fmt.Sprintf("Failed to remove %s: %v", id, err)}
+					continue
+				}
+				ch <- DeleteProgressMsg{Level: types.LogInfo, Message: "  Removed image-based rootfs"}
+				if err := RemovePortalHooks(home, id); err != nil {
+					ch <- DeleteProgressMsg{Level: types.LogWarn, Message: fmt.Sprintf("Hook cleanup: %v", err)}
+				} else {
+					ch <- DeleteProgressMsg{Level: types.LogInfo, Message: "  Removed shell hooks for " + id}
+				}
+				ch <- DeleteProgressMsg{Level: types.LogOK, Message: fmt.Sprintf("Distro %s removed successfully.", id)}
+				continue
+			}
 
 			cmd := exec.CommandContext(ctx, "proot-distro", "remove", id)
 			pr, pw := io.Pipe()
@@ -336,13 +379,10 @@ func runDeleteDistroCmd(ctx context.Context, ids []string) chan tea.Msg {
 			} else if waitErr != nil {
 				ch <- DeleteProgressMsg{Level: types.LogError, Message: fmt.Sprintf("Error removing %s: %v", id, waitErr)}
 			} else {
-				home := os.Getenv("HOME")
-				if home != "" {
-					if err := RemovePortalHooks(home, id); err != nil {
-						ch <- DeleteProgressMsg{Level: types.LogWarn, Message: fmt.Sprintf("Hook cleanup: %v", err)}
-					} else {
-						ch <- DeleteProgressMsg{Level: types.LogInfo, Message: "  Removed shell hooks for " + id}
-					}
+				if err := RemovePortalHooks(home, id); err != nil {
+					ch <- DeleteProgressMsg{Level: types.LogWarn, Message: fmt.Sprintf("Hook cleanup: %v", err)}
+				} else {
+					ch <- DeleteProgressMsg{Level: types.LogInfo, Message: "  Removed shell hooks for " + id}
 				}
 				ch <- DeleteProgressMsg{Level: types.LogOK, Message: fmt.Sprintf("Distro %s removed successfully.", id)}
 			}
@@ -464,7 +504,37 @@ func handleSelectDistro(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 		}
 		m.config.DistroID = id
 		m.config.Distro = name
-		m.nav.Push(types.ScreenSetup)
+		if id == "kali" {
+			m.kaliVariantCursor = 0
+			m.kaliArch = detectTermuxArch()
+			p, err := plugins.Get("kali")
+			if err == nil {
+				if kp, ok := p.(plugins.ImageBasedDistro); ok {
+					variants, verr := kp.Variants(m.kaliArch)
+					if verr == nil {
+						m.kaliVariants = variants
+					}
+				}
+			}
+			m.availableStorage, _ = checkAvailableStorage(os.Getenv("HOME"))
+			m.nav.Push(types.ScreenSetupKaliVariant)
+		} else if id == "parrot" {
+			m.parrotVariantCursor = 0
+			m.parrotArch = detectTermuxArch()
+			p, err := plugins.Get("parrot")
+			if err == nil {
+				if pp, ok := p.(plugins.MutableRootfsDistro); ok {
+					variants, verr := pp.BootstrapVariants(m.parrotArch)
+					if verr == nil {
+						m.parrotVariants = variants
+					}
+				}
+			}
+			m.availableStorage, _ = checkAvailableStorage(os.Getenv("HOME"))
+			m.nav.Push(types.ScreenSetupParrotVariant)
+		} else {
+			m.nav.Push(types.ScreenSetup)
+		}
 	case "esc":
 		m.nav.Pop()
 	}
@@ -481,8 +551,8 @@ func handleSetup(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 	case "enter":
 		switch m.setupCursor {
 		case 0:
-			m.subCursor = 0
-			m.nav.Push(types.ScreenSetupDE)
+			m.guiCursor = 0
+			m.nav.Push(types.ScreenSetupGUI)
 		case 1:
 			if m.config.DE == "cli" {
 				m.showError = true
@@ -746,6 +816,72 @@ func handleTextInput(m Model, key tea.KeyMsg, apply func(*Model, string)) (Model
 		if len(key.String()) == 1 && len([]rune(m.inputBuffer)) < types.MaxInputLen {
 			m.inputBuffer += key.String()
 		}
+	}
+	return m, nil
+}
+
+func handleGUISelection(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
+	n := len(guiOptions)
+	switch key.String() {
+	case "j", "down":
+		m.guiCursor = clampCursor(m.guiCursor+1, n)
+	case "k", "up":
+		m.guiCursor = clampCursor(m.guiCursor-1, n)
+	case "enter":
+		switch m.guiCursor {
+		case 0:
+			m.config.DE = "cli"
+			m.config.Display = ""
+			m.nav.Pop()
+		case 1:
+			m.subCursor = 0
+			m.nav.Push(types.ScreenSetupDE)
+		case 2:
+			m.subCursor = 0
+			m.nav.Push(types.ScreenSetupWM)
+		}
+	case "esc":
+		m.nav.Pop()
+	}
+	return m, nil
+}
+
+func handleKaliVariant(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
+	n := len(m.kaliVariants)
+	switch key.String() {
+	case "j", "down":
+		m.kaliVariantCursor = clampCursor(m.kaliVariantCursor+1, n)
+	case "k", "up":
+		m.kaliVariantCursor = clampCursor(m.kaliVariantCursor-1, n)
+	case "enter":
+		if m.kaliVariantCursor >= n || len(m.kaliVariants) == 0 {
+			return m, nil
+		}
+		variant := m.kaliVariants[m.kaliVariantCursor]
+		m.config.KaliVariant = variant.ID
+		m.nav.Push(types.ScreenSetup)
+	case "esc":
+		m.nav.Pop()
+	}
+	return m, nil
+}
+
+func handleParrotVariant(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
+	n := len(m.parrotVariants)
+	switch key.String() {
+	case "j", "down":
+		m.parrotVariantCursor = clampCursor(m.parrotVariantCursor+1, n)
+	case "k", "up":
+		m.parrotVariantCursor = clampCursor(m.parrotVariantCursor-1, n)
+	case "enter":
+		if m.parrotVariantCursor >= n || len(m.parrotVariants) == 0 {
+			return m, nil
+		}
+		variant := m.parrotVariants[m.parrotVariantCursor]
+		m.config.ParrotVariant = variant.ID
+		m.nav.Push(types.ScreenSetup)
+	case "esc":
+		m.nav.Pop()
 	}
 	return m, nil
 }

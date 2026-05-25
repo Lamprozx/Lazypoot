@@ -58,11 +58,6 @@ func RenderSelectDistro(items []types.DistroItem, cursor, width, height int) str
 
 	list := strings.TrimRight(listRows.String(), "\n")
 
-	scrollHint := ""
-	if len(items) > viewH {
-		scrollHint = "\n" + ui.StyleDim.Render(fmt.Sprintf("  %d/%d  [scroll with j/k]", cursor+1, len(items)))
-	}
-
 	footer := ui.Footer(
 		ui.KeyHint("↑↓ / jk", "navigate"),
 		ui.KeyHint("Space", "toggle"),
@@ -75,7 +70,7 @@ func RenderSelectDistro(items []types.DistroItem, cursor, width, height int) str
 		Render(ui.JoinRows(
 			header,
 			divider,
-			list+scrollHint,
+			list,
 			"",
 			footer,
 		))

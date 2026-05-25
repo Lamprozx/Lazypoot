@@ -14,10 +14,10 @@ func deStartCmd(de string) string {
 		return "gnome-session"
 	case "kde":
 		return "startplasma-x11"
-	case "mate":
-		return "mate-session"
-	case "cinnamon":
-		return "cinnamon-session"
+	case "awesome":
+		return "awesome"
+	case "i3":
+		return "i3"
 	}
 	return ""
 }

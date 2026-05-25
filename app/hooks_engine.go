@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-// ─── I/O layer: only file ops, exec, network ───
 
 func LockPath(home string) string {
 	return filepath.Join(home, ".lazypoot", ".lock")
@@ -102,7 +101,6 @@ func WriteManifest(home string, ids []string) error {
 	return os.Rename(tmp, path)
 }
 
-// ─── State I/O ───
 
 func ReadState(home string) *PortalState {
 	data, err := os.ReadFile(StatePath(home))
@@ -141,7 +139,6 @@ func SyncStateFromManifest(home string) error {
 	return nil
 }
 
-// ─── Backup ───
 
 func BackupRCFiles(home string) (rollback func(), err error) {
 	dir := BackupDir(home)
@@ -184,7 +181,6 @@ func BackupRCFiles(home string) (rollback func(), err error) {
 	return rollback, nil
 }
 
-// ─── Sync ───
 
 func SyncPortalHooks(home string) error {
 	ids := ReadManifest(home)
@@ -237,7 +233,6 @@ func SyncDryRun(home string) (string, error) {
 	return report.String(), nil
 }
 
-// ─── Helpers ───
 
 func stringSliceEqual(a, b []string) bool {
 	if len(a) != len(b) {

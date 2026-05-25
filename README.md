@@ -16,12 +16,6 @@
 
 ---
 
-> [!CAUTION] 
-> <font color="red">The current version of lazypoot is under development, you may encounter some bugs.</font>
-
-
----
-
 ## Table of Contents
 
 - [Overview](#-overview)
@@ -363,7 +357,7 @@ lazypoot/
 
 ---
 
-## 🤝 Contributings
+## 🤝 Contributing
 
 Issues, feature requests, and pull requests are welcome!
 ---

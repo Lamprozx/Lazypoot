@@ -216,6 +216,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 	case types.ScreenSetupDriver:
 		return handleDriverScreen(m, keyMsg)
+	case types.ScreenSetupAudio:
+		return handleSubList(m, keyMsg, audioOptions, audioIDs, func(m *Model, id string) {
+			m.config.InstallAudio = id == "yes"
+		})
 	case types.ScreenSetupProfileMenu:
 		return handleProfileMenu(m, keyMsg)
 	case types.ScreenSetupHostname:
@@ -542,7 +546,7 @@ func handleSelectDistro(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 }
 
 func handleSetup(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
-	const itemCount = 7
+	const itemCount = 8
 	switch key.String() {
 	case "j", "down":
 		m.setupCursor = clampCursor(m.setupCursor+1, itemCount)
@@ -568,14 +572,28 @@ func handleSetup(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 				return m, nil
 			}
 			m.subCursor = 0
+			for i, id := range driverIDs {
+				if id == m.config.AccelMode {
+					m.subCursor = i
+					break
+				}
+			}
 			m.nav.Push(types.ScreenSetupDriver)
 		case 3:
+			if m.config.DE == "cli" {
+				m.showError = true
+				m.errorMsg = "Audio is not needed for CLI Only mode"
+				return m, nil
+			}
+			m.subCursor = 0
+			m.nav.Push(types.ScreenSetupAudio)
+		case 4:
 			m.profileCursor = 0
 			m.nav.Push(types.ScreenSetupProfileMenu)
-		case 4:
+		case 5:
 			m.inputBuffer = strings.Join(m.config.Packages, " ")
 			m.nav.Push(types.ScreenSetupPackages)
-		case 5:
+		case 6:
 			m.subCursor = 0
 			for i, tz := range tzOptions {
 				if tz == m.config.Timezone {
@@ -584,7 +602,7 @@ func handleSetup(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 				}
 			}
 			m.nav.Push(types.ScreenSetupTimezone)
-		case 6:
+		case 7:
 			if errMsg := m.validate(); errMsg != "" {
 				m.showError = true
 				m.errorMsg = errMsg
@@ -599,13 +617,16 @@ func handleSetup(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
 }
 
 func handleDriverScreen(m Model, key tea.KeyMsg) (Model, tea.Cmd) {
+	n := len(driverOptions)
 	switch key.String() {
 	case "j", "down":
-		m.subCursor = clampCursor(m.subCursor+1, 2)
+		m.subCursor = clampCursor(m.subCursor+1, n)
 	case "k", "up":
-		m.subCursor = clampCursor(m.subCursor-1, 2)
+		m.subCursor = clampCursor(m.subCursor-1, n)
 	case "enter":
-		m.config.InstallVirGL = m.subCursor == 0
+		if m.subCursor < n {
+			m.config.AccelMode = driverIDs[m.subCursor]
+		}
 		m.nav.Pop()
 	case "esc":
 		m.nav.Pop()

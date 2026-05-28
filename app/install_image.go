@@ -240,7 +240,7 @@ func RunImageInstallPipeline(ctx context.Context, cfg types.InstallConfig, ch ch
 	}
 	cmds = append(cmds, p.InstallPackages(cfg.Packages)...)
 	cmds = append(cmds, p.SetupUser(cfg.Hostname)...)
-	if cfg.DE != "cli" && cfg.InstallVirGL {
+	if cfg.DE != "cli" && cfg.AccelMode != "software" {
 		cmds = append(cmds, p.SetupOpenGL()...)
 	}
 	cmds = append(cmds, p.PostInstall()...)

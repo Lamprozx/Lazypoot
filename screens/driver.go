@@ -9,19 +9,36 @@ import (
 )
 
 func RenderDriverScreen(options []string, icons []string, cursor int, width, height int) string {
-	header := ui.StyleTitle.Render("󰾲  GPU Driver / VirGL")
+	header := ui.StyleTitle.Render("󰾲  GPU Driver")
 	divider := ui.StyleDim.Render(strings.Repeat("─", 44))
 
-	infoBox := ui.StyleBoxBlue.Padding(0, 2).Render(ui.JoinRows(
-		ui.StyleCyan.Render("  About VirGL:"),
-		ui.StyleDim.Render("  VirGL provides GPU acceleration inside proot"),
-		ui.StyleDim.Render("  Provides OpenGL acceleration for desktop applications"),
-		ui.StyleDim.Render("  Optional feature (does not affect basic desktop functionality)"),
-		"",
-		ui.StyleYellow.Render("  What Will Installed:"),
-		ui.StyleDim.Render("  • virglrenderer (Termux host GPU bridge)"),
-		ui.StyleDim.Render("  • Mesa OpenGL drivers inside the distro"),
-	))
+	infoLines := []string{""}
+	switch cursor {
+	case 0:
+		infoLines = []string{
+			ui.StyleDim.Render("  Software rendering via CPU (LLVMpipe)"),
+			ui.StyleDim.Render("  Works on all devices, no extra setup"),
+		}
+	case 1:
+		infoLines = []string{
+			ui.StyleDim.Render("  VirGL: virtual OpenGL acceleration"),
+			ui.StyleDim.Render("  Install: virglrenderer-android (host)"),
+			ui.StyleDim.Render("  Server: virgl_test_server_android"),
+			ui.StyleDim.Render("  Proot:  GALLIUM_DRIVER=virpipe"),
+		}
+	case 2:
+		infoLines = []string{
+			ui.StyleDim.Render("  Zink: OpenGL → Vulkan translation"),
+			ui.StyleDim.Render("  Install: mesa-zink + vulkan-loader (host)"),
+			ui.StyleDim.Render("  Server: virgl_test_server (Zink mode)"),
+			ui.StyleDim.Render("  Proot:  GALLIUM_DRIVER=virpipe"),
+			"",
+			ui.StyleYellow.Render("  Requires Vulkan support on your GPU."),
+			ui.StyleYellow.Render("  Not all devices are compatible."),
+		}
+	}
+	infoLines = append([]string{ui.StyleCyan.Render("  " + options[cursor] + ":")}, infoLines...)
+	infoBox := ui.StyleBoxBlue.Padding(0, 2).Render(ui.JoinRows(infoLines...))
 
 	var rows strings.Builder
 	for i, opt := range options {
@@ -34,8 +51,8 @@ func RenderDriverScreen(options []string, icons []string, cursor int, width, hei
 		var lbl string
 		if isActive {
 			color := ui.ColGreen
-			if i == 1 {
-				color = ui.ColRed
+			if i == 2 {
+				color = ui.ColYellow
 			}
 			lbl = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(ui.ColBg)).

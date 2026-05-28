@@ -19,7 +19,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-const version = "1.0.0"
+const version = "2.1.0"
 
 func generateVNCPassword() (string, error) {
 	b := make([]byte, 16)
@@ -47,7 +47,8 @@ func RunInstallPipeline(ctx context.Context, cfg types.InstallConfig, ch chan te
 	sendLog(ch, types.LogInfo, fmt.Sprintf("Mode : %s", deModeName(cfg.DE)))
 	if cfg.DE != "cli" {
 		sendLog(ch, types.LogInfo, fmt.Sprintf("Display : %s", cfg.Display))
-		sendLog(ch, types.LogInfo, fmt.Sprintf("VirGL : %v", cfg.InstallVirGL))
+		sendLog(ch, types.LogInfo, fmt.Sprintf("Driver: %s", cfg.AccelMode))
+		sendLog(ch, types.LogInfo, fmt.Sprintf("Audio : %v", cfg.InstallAudio))
 	}
 	sendLog(ch, types.LogInfo, fmt.Sprintf("Hostname : %s", cfg.Hostname))
 	sendLog(ch, types.LogInfo, fmt.Sprintf("Users : %d additional", len(cfg.Users)))
@@ -115,7 +116,7 @@ func RunInstallPipeline(ctx context.Context, cfg types.InstallConfig, ch chan te
 	}
 	cmds = append(cmds, plugin.InstallPackages(cfg.Packages)...)
 	cmds = append(cmds, plugin.SetupUser(cfg.Hostname)...)
-	if cfg.DE != "cli" && cfg.InstallVirGL {
+	if cfg.DE != "cli" && cfg.AccelMode != "software" {
 		cmds = append(cmds, plugin.SetupOpenGL()...)
 	}
 	cmds = append(cmds, plugin.PostInstall()...)
@@ -157,15 +158,34 @@ func RunInstallPipeline(ctx context.Context, cfg types.InstallConfig, ch chan te
 	}
 	sendLog(ch, types.LogOK, "Chroot setup complete")
 
-	if cfg.DE != "cli" && cfg.InstallVirGL {
-		sendLog(ch, types.LogStep, " [6/8] Installing VirGL in Termux host...")
-		if err := streamExec(ctx, ch, "pkg", "install", "-y", "virglrenderer"); err != nil {
-			sendLog(ch, types.LogWarn, "virglrenderer install failed")
-		} else {
-			sendLog(ch, types.LogOK, "VirGL renderer ready")
+	needsVirGL := cfg.DE != "cli" && cfg.AccelMode != "software"
+	hasAudio := cfg.DE != "cli" && cfg.InstallAudio
+
+	if needsVirGL || hasAudio {
+		sendLog(ch, types.LogStep, " [6/8] Installing host packages...")
+		if needsVirGL {
+			switch cfg.AccelMode {
+			case "virgl":
+				sendLog(ch, types.LogInfo, "  VirGL: installing virglrenderer-android")
+				if err := streamExec(ctx, ch, "pkg", "install", "-y", "virglrenderer-android"); err != nil {
+					sendLog(ch, types.LogWarn, "virglrenderer-android install failed")
+				}
+			case "zink":
+				sendLog(ch, types.LogInfo, "  Zink: installing mesa-zink + virglrenderer-mesa-zink + vulkan-loader")
+				if err := streamExec(ctx, ch, "pkg", "install", "-y", "mesa-zink", "virglrenderer-mesa-zink", "vulkan-loader-android"); err != nil {
+					sendLog(ch, types.LogWarn, "Zink packages install failed — HW accel may not work")
+				}
+			}
 		}
+		if hasAudio {
+			sendLog(ch, types.LogInfo, "  Audio: installing pulseaudio")
+			if err := streamExec(ctx, ch, "pkg", "install", "-y", "pulseaudio"); err != nil {
+				sendLog(ch, types.LogWarn, "pulseaudio install failed — audio may not work")
+			}
+		}
+		sendLog(ch, types.LogOK, "Host packages ready")
 	} else {
-		sendLog(ch, types.LogInfo, " [6/8] Skipping VirGL")
+		sendLog(ch, types.LogInfo, " [6/8] Skipping host packages")
 	}
 	sendPct(ch, 75)
 

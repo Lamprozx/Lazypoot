@@ -299,11 +299,17 @@ func generateStartupScript(cfg types.InstallConfig) error {
 		return fmt.Errorf("home not set")
 	}
 
-	path := filepath.Join(home, ".lazypoot", "launchers", cfg.DistroID+".sh")
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	dir := filepath.Join(home, ".lazypoot", "launchers")
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
+	if cfg.Display == "x11" {
+		_, err := GenerateHostX11Launcher(cfg)
+		return err
+	}
+
+	path := filepath.Join(dir, cfg.DistroID+".sh")
 	script := fmt.Sprintf(`#!/bin/bash
 echo "starting %s..."
 proot-distro login '%s'

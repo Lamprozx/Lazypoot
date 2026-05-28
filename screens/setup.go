@@ -13,12 +13,13 @@ var setupLabels = []string{
 	"GUI Selection",
 	"Display Server",
 	"GPU Driver",
+	"Audio",
 	"Profile / Users",
 	"Extra Packages",
 	"Timezone",
 	"  Install  ",
 }
-var setupIcons = []string{"󰍹", "󰹑", "󰾲", "󰟀", "󰏗", "󰌎", "󰁔"}
+var setupIcons = []string{"󰍹", "󰹑", "󰾲", "󰓃", "󰟀", "󰏗", "󰌎", "󰁔"}
 
 func RenderSetup(cfg types.InstallConfig, cursor, width, height int) string {
 	header := ui.StyleTitle.Render("󰒋  Configure Install  ") +

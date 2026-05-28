@@ -10,9 +10,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var guiOptions = []string{"CLI Only", "Desktop Environment", "Window Manager"}
+var 	guiOptions = []string{"CLI Only", "Desktop Environment", "Window Manager"}
 var guiIcons = []string{"\uf489", "󰧨", "󰞷"}
 var guiIDs = []string{"cli", "de", "wm"}
+
+var audioOptions = []string{"No (default)", "Yes (PulseAudio)"}
+var audioIcons  = []string{"󰚆", "󰓃"}
+var audioIDs    = []string{"no", "yes"}
 
 var deOptions = []string{
 	"XFCE", "LXQt", "GNOME", "KDE Plasma", "CLI Only",
@@ -28,8 +32,9 @@ var displayOptions = []string{"X11 (Termux X11)", "VNC (TigerVNC)"}
 var displayIcons = []string{"󰹑", "󰢹"}
 var displayIDs = []string{"x11", "vnc"}
 
-var driverOptions = []string{"Install GPU acceleration (VirGL / OpenGL)", "Disable (software rendering only)"}
-var driverIcons = []string{"󰾲", "󰒇"}
+var driverOptions = []string{"Software (LLVMpipe)", "VirGL", "Zink (via Vulkan)"}
+var driverIcons = []string{"󰒇", "󰾲", "󰾲"}
+var driverIDs = []string{"software", "virgl", "zink"}
 
 var tzOptions = []string{
 	"Asia/Jakarta", "Asia/Singapore", "Asia/Tokyo", "Asia/Shanghai",
@@ -106,7 +111,7 @@ func NewModel() Model {
 		width:       80,
 		height:      24,
 		nav:         newNavStack(),
-		config:      types.InstallConfig{Timezone: "Asia/Jakarta"},
+		config:      types.InstallConfig{Timezone: "Asia/Jakarta", AccelMode: "software"},
 		distroItems: defaultDistroItems(),
 	}
 }

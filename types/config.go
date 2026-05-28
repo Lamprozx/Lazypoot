@@ -25,6 +25,7 @@ const (
 	ScreenSetupAddUser
 	ScreenSetupAddUserPass
 	ScreenSetupDeleteUser
+	ScreenSetupAudio
 	ScreenSetupPackages
 	ScreenSetupTimezone
 	ScreenConfirmInstall
@@ -57,13 +58,14 @@ type InstallConfig struct {
 	DistroID	string
 	DE		string
 	Display		string
-	InstallVirGL	bool
 	Hostname	string
 
 	VNCPassword	string
 	Users		[]UserAccount
 	Packages		[]string
 	Timezone	string
+	AccelMode	string // "software" | "virgl" | "zink"
+	InstallAudio	bool
 	KaliVariant	string
 	ParrotVariant	string
 	AvailableStorage	int64

@@ -37,6 +37,8 @@ func (m Model) View() string {
 		return screens.RenderSetupSubscreen("󰹑  Display Server", displayOptions, displayIcons, m.subCursor, m.width, m.height)
 	case types.ScreenSetupDriver:
 		return screens.RenderDriverScreen(driverOptions, driverIcons, m.subCursor, m.width, m.height)
+	case types.ScreenSetupAudio:
+		return screens.RenderSetupSubscreen("󰓃  Audio (PulseAudio)", audioOptions, audioIcons, m.subCursor, m.width, m.height)
 	case types.ScreenSetupProfileMenu:
 		return screens.RenderProfileMenu(profileMenuLabels, profileMenuIcons, m.profileCursor, m.config, m.width, m.height)
 	case types.ScreenSetupHostname:

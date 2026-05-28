@@ -9,7 +9,7 @@ import (
 )
 
 func RenderParrotVariant(variants []plugins.BootstrapVariant, cursor int, storage int64, arch string, width, height int) string {
-	header := ui.StyleTitle.Render("  Parrot OS — Select Variant")
+	header := ui.StyleTitle.Render("ﴣ  Parrot OS — Select Variant")
 
 	archLine := ui.StyleCyan.Render("  Arch: ") + ui.StyleBold.Render(arch)
 	freeStr := "unknown"
@@ -28,7 +28,7 @@ func RenderParrotVariant(variants []plugins.BootstrapVariant, cursor int, storag
 			pointer = ui.StyleCursor.Render("❯ ")
 		}
 
-		icon := "󰏓 "
+		icon := " "
 		if isActive {
 			icon = ui.StyleCyan.Render(icon)
 		} else {

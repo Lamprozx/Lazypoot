@@ -21,9 +21,9 @@ func RenderCart(cfg types.InstallConfig, width int) string {
 		return k + v
 	}
 
-	virglVal := "no"
-	if cfg.InstallVirGL {
-		virglVal = "yes"
+	audioVal := "no"
+	if cfg.InstallAudio {
+		audioVal = "yes"
 	}
 	pkgs := strings.Join(cfg.Packages, " ")
 	userCount := ""
@@ -37,7 +37,8 @@ func RenderCart(cfg types.InstallConfig, width int) string {
 		line("󰣇", "Distro", cfg.Distro),
 		line("󰍹", "DE", cfg.DE),
 		line("󰹑", "Display", cfg.Display),
-		line("󰾲", "Driver", virglVal),
+		line("󰾲", "Driver", cfg.AccelMode),
+		line("󰓃", "Audio", audioVal),
 		line("󰟀", "Host", cfg.Hostname),
 		line("󰯄", "Users", userCount),
 		line("󰏗", "Pkgs", pkgs),

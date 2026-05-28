@@ -5,7 +5,7 @@ MODULE      ?= lazypoot
 PKG         ?= ./...
 GO          ?= go
 
-VERSION     ?= 2.1.0
+VERSION     ?= 2.2.0
 GOFLAGS     ?= -trimpath -buildvcs=false
 TAGS        ?= osusergo netgo
 

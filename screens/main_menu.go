@@ -69,7 +69,7 @@ func RenderMainMenu(cursor, width, height int) string {
 	)
 	versionLine := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ui.ColComment)).
-		Render("  \uf489  lazypoot v2.1.0  ·  proot-distro manager")
+		Render("  \uf489  lazypoot v2.2.0  ·  proot-distro manager")
 
 	panel := ui.StyleBoxBlue.
 		Padding(1, 4).

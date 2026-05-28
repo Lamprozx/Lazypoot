@@ -82,7 +82,7 @@ LazyPoot is a Go-based TUI application for Termux that installs and manages Linu
 
 ```bash
 # Download the binary
-wget https://github.com/Lamprozx/Lazypoot/releases/download/v1.0.0-beta/lazypoot-arm64
+wget https://github.com/Lamprozx/Lazypoot/releases/download/v2.2.0/lazypoot-arm64
 chmod +x lazypoot-arm64
 ./lazypoot-arm64
 ```
@@ -92,7 +92,7 @@ Or build from source:
 ```bash
 git clone https://github.com/Lamprozx/Lazypoot.git
 cd Lazypoot
-make arm64
+make termux-arm64 ## make termux-armhf for 32 bit
 chmod +x lazypoot-arm64
 ./lazypoot-arm64
 ## MAKE SURE YOU HAVE GO INSTALLED ON YOUR TERMUX
